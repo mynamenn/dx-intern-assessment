@@ -13,28 +13,32 @@
     <link rel="stylesheet" href="custom.css?v=1.0" />
 
 </head>
-<script src="jszip.js"></script>
-<script type="text/javascript">
-    function handleZipFile(event) {
-        var file = event.target.files[0];
-        if (isZipFile(file.name)) {
-            document.getElementById("no-images-found").style.display = "none";
-            var zip = new JSZip();
-            var imgDiv = document.getElementById("images-div");
 
-            zip.loadAsync(file).then(function (contents) {
-                var images = contents.files;
-                for (var key in images) {
-                    var blob = new Blob([images[key]._data.compressedContent.buffer], { type: 'image/png' });
-                    console.log(images[key])
-                    const reader = new FileReader();
-                    reader.addEventListener("load", () => {
-                        // console.log(reader.result);
-                        imgDiv.innerHTML = imgDiv.innerHTML + `<img src=${reader.result}/><br/>`;
-                    });
-                    reader.readAsDataURL(blob);
-                };
-            });
+<script type="text/javascript" src="zip.min.js"></script>
+
+<script type="text/javascript">
+    async function handleZipFile(event) {
+        var file = event.target.files[0];
+        var imgDiv = document.getElementById("images-div");
+        // Clears imgDiv on each upload.
+        imgDiv.innerHTML = "";
+        // Checks if it's a zip file.
+        if (isZipFile(file.name)) {
+            // Hide no images found message. 
+            document.getElementById("no-images-found").style.display = "none";
+            const reader = new zip.ZipReader(new zip.BlobReader(file));
+            // Get all entries from the zip.
+            const entries = await reader.getEntries();
+            if (entries.length) {
+                // Iterate through the entries.
+                entries.forEach(async entry => {
+                    const base64string = await entry.getData(
+                        new zip.Data64URIWriter(["image/jpg"])
+                    );
+                    // Add image into imgDiv.
+                    imgDiv.innerHTML = imgDiv.innerHTML + `<img class="extracted-img" src="${base64string}"/><br/>`;
+                });
+            }
         } else {
             alert("Please upload a zip file.");
             document.getElementById("no-images-found").style.display = "block";

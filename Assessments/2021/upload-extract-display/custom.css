@@ -32,3 +32,10 @@ b.yellow {
 .display-wrapper {
     padding: 10px;
 }
+
+.extracted-img{
+    height: auto;
+    width: auto;
+    max-height: 500px;
+    padding-bottom: 10px;
+}
